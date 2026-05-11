@@ -1,6 +1,5 @@
-import ./hardware/gpio
-import ./pico/time
-
+import gpio
+import picostdlib
 type
   SevenSeg* {.pure.} = enum
     a, b, c, dp, d, e, f, g
@@ -25,8 +24,7 @@ const
     C: 'c',
     D: 'd',
     E: 'e',
-    F: 'f'
-  ]
+    F: 'f',]
   DisplayChars = [
     Zero: {a, b, c, d, e, f},
     One: {b, c},
@@ -43,34 +41,33 @@ const
     C: {a, d, e, f},
     D: {b, c, d, e, g},
     E: {a, d, e, f, g},
-    F: {a, e, f, g}
-  ]
+    F: {a, e, f, g},]
 
 var SevenSegPins*: array[SevenSeg, Gpio]
 
-proc getCharacter*(c: char): (CharacterName, bool) =
+proc getCharacter*(c: char): (CharacterName, bool)=
   if c in Displayable:
-    for charName, x in CharLut:
+    for i, x in CharLut:
       if x == c:
-        return (charName, true)
+        return (i.CharacterName, true)
 
 proc draw*(s: CharacterName, drawMissing = true) =
   for c in SevenSeg:
-    let val =
+    let val = 
       if drawMissing: c notin DisplayChars[s]
       else: c in DisplayChars[s]
-    SevenSegPins[c].put(val.Value)
+    SevenSegPins[c].put(val)
 
-proc drawAll*() =
+proc drawAll* = 
   for c in SevenSeg:
     SevenSegPins[c].put(High)
   for c in SevenSeg:
     SevenSegPins[c].put(Low)
-    sleepMs(100)
+    sleep(100)
     SevenSegPins[c].put(High)
 
 proc initPins*() =
   for x in SevenSeg:
-    SevenSegPins[x].init()
+    SevenSegPins[x].init
     SevenSegPins[x].setDir(Out)
     SevenSegPins[x].put(High)
